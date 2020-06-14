@@ -1,0 +1,129 @@
+<html>
+<head>
+    <title>Monitoring</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<meta http-equiv="refresh" content="60"/>
+    <script type="text/javascript">
+    var appURL = "http://localhost/uptime-dashboard/";
+    var refreshMS = 180000; // 3 * 60 * 1000 = 180000
+    
+    var domainsArr = [];
+    var file = "domains.txt";
+    function generateDomainArr() {
+        $.get(file,function(txt){
+            var lines = txt.split("\n");
+            for (var i = 0, len = lines.length; i < len; i++) {
+                if (lines[i].trim() != '')
+                    domainsArr.push(lines[i].trim());
+            }
+            processDomains();
+        });
+    }
+    function processDomains() {
+        $('#statusTable > tbody').html('');
+        for (var i = 0, len = domainsArr.length; i < len; i++) {
+            checkDomain(domainsArr[i]);
+        }
+    }
+    function checkDomain(domain) {
+        $.get(appURL + "checkDomain.php?domain=" + domain,function(result) {
+            var now = new Date($.now());
+            var now_format = (now.getMonth()+1)  + "/"
+                                + now.getDate() + "/"
+                                + now.getFullYear() + " @ "  
+                                + now.getHours() + ":"  
+                                + now.getMinutes();                                
+            if (result == "-1") {
+                $('#statusTable > tbody:last').append('<tr><td class="red"><a href="' + domain + '" target="_blank">' + domain + '</a></td><td class="red">NEMA ODGOVORA</td><td class="red">' + now_format + '</td><td width="10px"><a href="#" class="deleteDomainHref" data-domain="' + domain + '"><i class="icon-delete" title="Delete URL"></i></a></tr>');
+            } else {
+                var color = "green";
+                var response_color = "green";
+                if (result >= 1000)
+                    response_color = "red";
+                else if (result >= 400)
+                    response_color = "gold";
+                
+                $('#statusTable > tbody:last').append('<tr><td class="' + color + '"><a href="' + domain + '" target="_blank">' + domain + '</a></td><td class="' + response_color + '">' + result + ' ms</td><td class="' + color + '">' + now_format + '</td><td width="10px"><a href="#" class="deleteDomainHref" data-domain="' + domain + '"><i class="icon-delete" title="Delete URL"></i></a></tr>');
+            }
+        });
+    }
+    $(document).ready(function() {
+        // uzmi domains.txt fajl
+        generateDomainArr();
+        
+        window.setInterval(function() {
+            processDomains();
+        }, refreshMS);
+        
+        $("#submitDomain").on("click", function (e) {
+            if ($("#addDomain").val().indexOf("http://") > -1 || $("#addDomain").val().indexOf("https://") > -1) {
+                var newDomain = $("#addDomain").val().trim();
+                if (newDomain.substr(-1) === '/') {
+                    newDomain = newDomain.substr(0, newDomain.length - 1);
+                    $("#addDomain").val(newDomain);
+                }
+                $('#addDomainForm').attr('action', appURL + "addDomain.php");
+                $("#addDomainForm").submit();
+                $('#addResult').toggle();
+                $('#addResult').fadeOut(5000);
+                e.preventDefault();
+                domainsArr.push(newDomain);
+                processDomains();
+            } else {
+                $('#error').toggle();
+                $('#error').fadeOut(5000);
+            }
+        });
+        $("#statusTable > tbody").on("click", "a.deleteDomainHref", function (e) {
+            $("#deleteDomain").val($(this).attr('data-domain'));
+            $('#deleteDomainForm').attr('action', appURL + "deleteDomain.php");
+            $("#deleteDomainForm").submit();
+            e.preventDefault();
+            $('#deleteResult').toggle();
+            $('#deleteResult').fadeOut(5000);
+            var element_index = domainsArr.indexOf($(this).attr('data-domain'));
+            if (element_index >= 0) {
+              domainsArr.splice( element_index, 1 );
+            }
+            processDomains();
+        });
+    });
+</script>
+</head>
+<body>
+    <section class="header">
+	<a href="http://mega.rs/sr"><img src="http://www.mega.rs/wp-content/uploads/2017/05/homepage_logo_red_d.png"></img></a>
+    </section>
+    
+    <section class="main">
+        <table id="statusTable" cellspacing='0'>
+            <thead>
+            <tr>
+                <th>Aplikacija</th>
+                <th>Status</th>
+                <th>Poslednja Provera</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="results"></tbody>
+        </table>
+        <form name="deleteDomainForm" id="deleteDomainForm" target="hiddenIframe" method="post">
+            <input type="hidden" name="deleteDomainForm" value="" />
+            <input type="hidden" name="deleteDomain" id="deleteDomain" value="" />
+        </form>
+    </section>
+    
+    <section class="add">
+        <form name="addDomainForm" id="addDomainForm" target="hiddenIframe" method="post">
+            <input type="hidden" name="addDomainForm" value="" />
+            <input type="text" name="addDomain" id="addDomain" value="" placeholder="http://mega.rs" />
+            <input type="button" name="submitDomain" id="submitDomain" value="Dodaj" />
+        </form>
+        <div id="error" class="red" style="display:none">Nije validan URL (pocinje sa http://)</div>
+        <div id="addResult" class="green" style="display:none">Sajt dodat</div>
+        <div id="deleteResult" class="green" style="display:none">Sajt obrisan</div>
+        <iframe name="hiddenIframe" width="0" height="0" border="0" style="display:none"></iframe>
+    </section>
+</body>
+</html>
