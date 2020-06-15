@@ -93,16 +93,16 @@
 </head>
 <body>
     <section class="header">
-	<a href="http://mega.rs/sr"><img src="http://www.mega.rs/wp-content/uploads/2017/05/homepage_logo_red_d.png"></img></a>
+	<h1 class="title" style="padding-top:30px">Uptime Dashboard</h1>
     </section>
     
     <section class="main">
         <table id="statusTable" cellspacing='0'>
             <thead>
             <tr>
-                <th>Aplikacija</th>
+                <th>Domain</th>
                 <th>Status</th>
-                <th>Poslednja Provera</th>
+                <th>Date</th>
                 <th></th>
             </tr>
             </thead>
@@ -117,12 +117,12 @@
     <section class="add">
         <form name="addDomainForm" id="addDomainForm" target="hiddenIframe" method="post">
             <input type="hidden" name="addDomainForm" value="" />
-            <input type="text" name="addDomain" id="addDomain" value="" placeholder="http://mega.rs" />
-            <input type="button" name="submitDomain" id="submitDomain" value="Dodaj" />
+            <input type="text" name="addDomain" id="addDomain" value="" placeholder="http://domain.com" />
+            <input type="button" name="submitDomain" id="submitDomain" value="Submit" />
         </form>
-        <div id="error" class="red" style="display:none">Nije validan URL (pocinje sa http://)</div>
-        <div id="addResult" class="green" style="display:none">Sajt dodat</div>
-        <div id="deleteResult" class="green" style="display:none">Sajt obrisan</div>
+        <div id="error" class="red" style="display:none">URL is not valid (start with http://)</div>
+        <div id="addResult" class="green" style="display:none">Domain added</div>
+        <div id="deleteResult" class="green" style="display:none">Domain removed</div>
         <iframe name="hiddenIframe" width="0" height="0" border="0" style="display:none"></iframe>
     </section>
 </body>
